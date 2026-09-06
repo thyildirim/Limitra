@@ -1,8 +1,8 @@
-from rest_framework import generics
+from rest_framework import generics, status
 from apps.accounts.models import Account
 from apps.accounts.serializers import UserSerializer
-from rest_framework.permissions import AllowAny
-from django.contrib.auth import authenticate, login
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from django.contrib.auth import authenticate, login, logout
 from rest_framework.response import Response
 
 class RegisterView(generics.CreateAPIView):
@@ -28,7 +28,7 @@ class LoginView(generics.GenericAPIView):
 class LogoutView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]  
     
-    def post(seşf,request):
+    def post(self, request):
         logout(request)
         return Response({'message': 'Logout successful'}, status=status.HTTP_200_OK)
 
