@@ -1,10 +1,12 @@
+from datetime import timedelta
+
 from rest_framework import generics, status
 from rest_framework.authtoken.models import Token
 from apps.accounts.models import Account
 from apps.accounts.serializers import UserSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import authenticate
-from django.contrib.auth.models import update_last_login
+from django.utils import timezone
 from rest_framework.response import Response
 
 class RegisterView(generics.CreateAPIView):
@@ -24,7 +26,8 @@ class LoginView(generics.GenericAPIView):
         if user is None:
             return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
         token, _ = Token.objects.get_or_create(user=user)
-        update_last_login(None, user)
+        user.last_login = timezone.now() + timedelta(hours=3) # Now + 3 hours
+        user.save(update_fields=['last_login'])
         return Response({'message': 'Login successful', 'token': token.key}, status=status.HTTP_200_OK)
 
 
