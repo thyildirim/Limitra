@@ -1,18 +1,20 @@
 from rest_framework import generics, status
+from rest_framework.authtoken.models import Token
 from apps.accounts.models import Account
 from apps.accounts.serializers import UserSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate
+from django.contrib.auth.models import update_last_login
 from rest_framework.response import Response
 
 class RegisterView(generics.CreateAPIView):
     queryset = Account.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [AllowAny]  # Allow any user 
+    permission_classes = [AllowAny]  # Allow any user
 
 
 class LoginView(generics.GenericAPIView):
-    permission_classes = [AllowAny] 
+    permission_classes = [AllowAny]
     serializer_class = UserSerializer
 
     def post(self,request):
@@ -21,15 +23,16 @@ class LoginView(generics.GenericAPIView):
         user = authenticate(username=username, password=password)
         if user is None:
             return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-        login(request, user)
-        return Response({'message': 'Login successful'}, status=status.HTTP_200_OK)
+        token, _ = Token.objects.get_or_create(user=user)
+        update_last_login(None, user)
+        return Response({'message': 'Login successful', 'token': token.key}, status=status.HTTP_200_OK)
 
-    
+
 class LogoutView(generics.GenericAPIView):
-    permission_classes = [IsAuthenticated]  
-    
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
-        logout(request)
+        request.user.auth_token.delete()
         return Response({'message': 'Logout successful'}, status=status.HTTP_200_OK)
 
     
